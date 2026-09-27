@@ -1,181 +1,166 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Menu Weilà & Kai</title>
+import streamlit as st
+import datetime
+import pandas as pd
+
+# 1. Configurazione e Ottimizzazione Layout (Smartphone-friendly per clienti e staff)
+st.set_page_config(page_title="Gestione Weilà & Kai", layout="centered")
+st.markdown("""
     <style>
-        :root { --primary: #e74c3c; --success: #27ae60; --bg: #f4f6f8; --card: #ffffff; --text: #2c3e50; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); padding-bottom: 120px; }
-        
-        .header { background: #1a1a1a; color: white; padding: 20px; text-align: center; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
-        .header h1 { font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 1px;}
-        .header p { font-size: 13px; color: #aaa; margin: 5px 0 0 0; }
-        
-        .container { padding: 15px; }
-        h2 { font-size: 18px; font-weight: 700; color: #1a1a1a; margin-top: 25px; margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 10px;}
-        
-        .menu-item { background: var(--card); padding: 16px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; position: relative;}
-        .item-info { width: 75%; }
-        .item-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;}
-        .item-desc { font-size: 12px; color: #7f8c8d; line-height: 1.4; margin-bottom: 8px; }
-        .item-price { font-weight: 800; color: var(--primary); font-size: 15px; }
-        
-        .badge { background: #f39c12; color: white; font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase;}
-        
-        .add-btn { background: #1a1a1a; color: white; border: none; border-radius: 8px; width: 35px; height: 35px; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
-        .add-btn:active { transform: scale(0.95); }
-
-        /* Floating Cart (Sticky Bottom) */
-        .floating-cart { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100;}
-        .cart-totals { display: flex; flex-direction: column; }
-        .cart-totals span:first-child { font-size: 12px; color: #7f8c8d; }
-        .cart-totals span:last-child { font-size: 20px; font-weight: 900; color: var(--text); }
-        .submit-btn { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-size: 15px; font-weight: bold; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); cursor: pointer;}
-        
-        /* Modal Upselling */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 200; padding: 20px;}
-        .modal-content { background: white; width: 100%; max-width: 350px; border-radius: 16px; padding: 20px; text-align: center; }
-        .modal-content h3 { margin-top: 0; color: #1a1a1a; }
-        .upsell-items { display: flex; justify-content: space-around; margin: 20px 0; }
-        .upsell-item { background: #f8f9fa; padding: 10px; border-radius: 10px; width: 45%; border: 1px solid #eee; }
-        .upsell-item button { background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-top: 10px; font-weight: bold; cursor: pointer; width: 100%;}
-        .close-modal { background: #ecf0f1; color: #7f8c8d; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer;}
-
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        .block-container {padding-top: 1rem; padding-bottom: 3rem;}
     </style>
-</head>
-<body>
+""", unsafe_allow_html=True)
 
-    <div class="header">
-        <h1>WEILÀ & KAI</h1>
-        <p id="titolo-tavolo">Tavolo in caricamento...</p>
-    </div>
+# 2. Simulazione Database in memoria (Utenti, Menu, Comande)
+if 'utenti' not in st.session_state:
+    st.session_state.utenti = {
+        "admin": {"pwd": "123", "ruolo": "Admin"},
+        "mario": {"pwd": "123", "ruolo": "Senior"},
+        "luigi": {"pwd": "123", "ruolo": "Junior"}
+    }
+if 'menu' not in st.session_state:
+    st.session_state.menu = [
+        {"id": 1, "nome": "Spaghetti all'Assassina", "prezzo": 12.00, "categoria": "Primi"},
+        {"id": 2, "nome": "Pizza Weilà", "prezzo": 13.00, "categoria": "Pizze"},
+        {"id": 3, "nome": "Acqua Naturale", "prezzo": 2.00, "categoria": "Bevande"}
+    ]
+if 'comande' not in st.session_state:
+    st.session_state.comande = [] # Memorizza {id_ordine, tavolo, totale, stato, piatti}
+if 'carrello' not in st.session_state:
+    st.session_state.carrello = []
+if 'utente_loggato' not in st.session_state:
+    st.session_state.utente_loggato = None
 
-    <div class="container" id="menu-container"></div>
+# 3. Instradamento tramite URL
+tavolo = st.query_params.get("tavolo", None)
 
-    <div class="floating-cart">
-        <div class="cart-totals">
-            <span>Totale Ordine (<span id="cart-count">0</span>)</span>
-            <span>€<span id="cart-total">0.00</span></span>
-        </div>
-        <button class="submit-btn" onclick="tentaInvio()">Invia Ordine 🚀</button>
-    </div>
-
-    <!-- Modale Upselling -->
-    <div class="modal-overlay" id="upsell-modal">
-        <div class="modal-content">
-            <h3>Manca qualcosa? 😋</h3>
-            <p style="font-size: 14px; color: #7f8c8d;">Completa il tuo ordine con i nostri sfizi:</p>
+# ==========================================
+# LATO CLIENTE (Se c'è ?tavolo nell'URL)
+# ==========================================
+if tavolo:
+    st.title(f"📍 Tavolo {tavolo}")
+    st.caption("Benvenuti da Weilà & Kai. Componi il tuo ordine.")
+    
+    # Visualizzazione Menu
+    categorie = sorted(list(set([p["categoria"] for p in st.session_state.menu])))
+    for cat in categorie:
+        st.subheader(cat)
+        for piatto in [p for p in st.session_state.menu if p["categoria"] == cat]:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.write(f"**{piatto['nome']}** - €{piatto['prezzo']:.2f}")
+            with col2:
+                if st.button("➕", key=f"add_{piatto['id']}"):
+                    st.session_state.carrello.append(piatto)
+                    st.toast(f"{piatto['nome']} aggiunto!")
+    
+    st.divider()
+    
+    # Carrello e Invio Ordine
+    st.subheader("🛒 Il tuo Ordine")
+    if not st.session_state.carrello:
+        st.info("Il carrello è vuoto.")
+    else:
+        for i, item in enumerate(st.session_state.carrello):
+            st.write(f"- {item['nome']}")
             
-            <div class="upsell-items">
-                <div class="upsell-item">
-                    <div style="font-size: 24px;">🍟</div>
-                    <div style="font-weight: bold; font-size: 14px; margin-top: 5px;">Patatine</div>
-                    <div style="font-size: 12px; color: var(--primary);">+ €4.00</div>
-                    <button onclick="aggiungiUpsell(101, 'Patatine Fritte', 4.00)">Aggiungi</button>
-                </div>
-                <div class="upsell-item">
-                    <div style="font-size: 24px;">🍰</div>
-                    <div style="font-weight: bold; font-size: 14px; margin-top: 5px;">Tiramisù</div>
-                    <div style="font-size: 12px; color: var(--primary);">+ €3.50</div>
-                    <button onclick="aggiungiUpsell(102, 'Tiramisù', 3.50)">Aggiungi</button>
-                </div>
-            </div>
-
-            <button class="submit-btn" style="width: 100%; background: #1a1a1a; margin-top: 10px;" onclick="inviaDefinitivo()">No grazie, INVIA ORDINE</button>
-            <button class="close-modal" onclick="chiudiModal()">Torna al menù</button>
-        </div>
-    </div>
-
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const tavolo = urlParams.get('tavolo') || "Test";
-        document.getElementById('titolo-tavolo').innerText = `📍 Tavolo ${tavolo}`;
-
-        // Menu ufficiale arricchito
-        const menu = [
-            { id: 1, categoria: "🍤 Antipasti", nome: "Lingotto di Salmone", desc: "Con stracciatella e crumble di tarallo", prezzo: 12.00, consigliato: true },
-            { id: 2, categoria: "🍤 Antipasti", nome: "Frittelle Farcite (3 pz)", desc: "Mortadella, stracciatella e pistacchio / Tonno e maio / Gorgonzola", prezzo: 6.00, consigliato: false },
-            { id: 3, categoria: "🍤 Antipasti", nome: "Bruschette Gourmet", desc: "Salmone e avocado / Ricotta e pesto / Provolone e cipolla", prezzo: 6.00, consigliato: false },
-            { id: 4, categoria: "🍝 Primi", nome: "Spaghetti all'Assassina", desc: "La classica ricetta barese saltata in padella", prezzo: 12.00, consigliato: true },
-            { id: 5, categoria: "🍝 Primi", nome: "Assassina Rape e Burrata", desc: "Variante con cime di rapa e burrata", prezzo: 14.00, consigliato: false },
-            { id: 6, categoria: "🍕 Pizze", nome: "Pizza Weilà", desc: "Impasto cereali, Philadelphia, datterino giallo, salmone, burratina, pistacchio", prezzo: 13.00, consigliato: true },
-            { id: 7, categoria: "🍕 Pizze", nome: "Capocollo", desc: "Pomodoro, mozzarella, burrata, capocollo di Martina Franca", prezzo: 10.00, consigliato: false },
-            { id: 8, categoria: "🥩 Secondi", nome: "Tonno Scottato", desc: "In crosta di semi di papavero", prezzo: 16.00, consigliato: false },
-            { id: 9, categoria: "🥩 Secondi", nome: "Zampina (250gr)", desc: "Tipica salsiccia a ruota", prezzo: 10.00, consigliato: false }
-        ];
-
-        let carrello = [];
-        let totale = 0;
-
-        function renderMenu() {
-            const container = document.getElementById('menu-container');
-            let currentCategory = "";
-
-            menu.forEach(item => {
-                if (item.categoria !== currentCategory) {
-                    container.innerHTML += `<h2>${item.categoria}</h2>`;
-                    currentCategory = item.categoria;
-                }
-
-                let badgeHtml = item.consigliato ? `<span class="badge">🔥 I più amati</span>` : '';
-
-                container.innerHTML += `
-                    <div class="menu-item">
-                        <div class="item-info">
-                            <div class="item-name">${item.nome} ${badgeHtml}</div>
-                            <div class="item-desc">${item.desc}</div>
-                            <div class="item-price">€${item.prezzo.toFixed(2)}</div>
-                        </div>
-                        <button class="add-btn" onclick="aggiungi(${item.id})">+</button>
-                    </div>
-                `;
-            });
-        }
-
-        function aggiungi(id) {
-            const prodotto = menu.find(p => p.id === id);
-            carrello.push(prodotto);
-            aggiornaCarrello();
-            
-            // Feedback visivo (vibrazione se supportata)
-            if (navigator.vibrate) navigator.vibrate(50);
-        }
-
-        function aggiungiUpsell(id, nome, prezzo) {
-            carrello.push({ id: id, nome: nome, prezzo: prezzo });
-            aggiornaCarrello();
-            chiudiModal();
-            inviaDefinitivo();
-        }
-
-        function aggiornaCarrello() {
-            totale = carrello.reduce((sum, item) => sum + item.prezzo, 0);
-            document.getElementById('cart-total').innerText = totale.toFixed(2);
-            document.getElementById('cart-count').innerText = carrello.length;
-        }
-
-        // Apre il pop-up di Upselling prima di inviare
-        function tentaInvio() {
-            if (carrello.length === 0) {
-                alert("Aggiungi qualche piatto prima di ordinare!");
-                return;
+        totale = sum(item['prezzo'] for item in st.session_state.carrello)
+        st.write(f"**Totale: €{totale:.2f}**")
+        
+        if st.button("🚀 INVIA ORDINE IN CUCINA", type="primary"):
+            nuova_comanda = {
+                "id_ordine": len(st.session_state.comande) + 1,
+                "tavolo": tavolo,
+                "piatti": [p["nome"] for p in st.session_state.carrello],
+                "totale": totale,
+                "stato": "In Attesa",
+                "ora": datetime.datetime.now().strftime("%H:%M")
             }
-            document.getElementById('upsell-modal').style.display = 'flex';
-        }
+            st.session_state.comande.append(nuova_comanda)
+            st.session_state.carrello = [] # Svuota carrello
+            st.success("Ordine inviato con successo!")
+            st.rerun()
 
-        function chiudiModal() {
-            document.getElementById('upsell-modal').style.display = 'none';
-        }
+# ==========================================
+# LATO STAFF (Se il link è pulito)
+# ==========================================
+else:
+    # 4. Sistema di Login
+    if not st.session_state.utente_loggato:
+        st.title("🔐 Accesso Staff")
+        with st.form("login_form"):
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            submit = st.form_submit_button("Accedi")
+            
+            if submit:
+                if username in st.session_state.utenti and st.session_state.utenti[username]["pwd"] == password:
+                    st.session_state.utente_loggato = st.session_state.utenti[username]
+                    st.session_state.utente_loggato["username"] = username
+                    st.rerun()
+                else:
+                    st.error("Credenziali non valide.")
+    
+    # 5. Dashboard Protetta (Gestione basata sui Ruoli)
+    else:
+        user = st.session_state.utente_loggato
+        st.sidebar.title(f"👤 {user['username'].capitalize()}")
+        st.sidebar.caption(f"Ruolo: {user['ruolo']}")
+        if st.sidebar.button("🚪 Esci"):
+            st.session_state.utente_loggato = None
+            st.rerun()
 
-        function inviaDefinitivo() {
-            chiudiModal();
-            alert(`✅ Ordine per il Tavolo ${tavolo} inviato con successo! Totale: €${totale.toFixed(2)}`);
-            carrello = [];
-            aggiornaCarrello();
-        }
+        st.title("Pannello di Controllo")
 
-        renderMenu();
-    </script>
-</body>
-</html>
+        # PANNELLO COMUNE: Gestione Comande (Visibile a Junior, Senior, Admin)
+        st.header("📋 Comande in Arrivo")
+        if not st.session_state.comande:
+            st.info("Nessuna comanda attiva.")
+        else:
+            for comanda in reversed(st.session_state.comande):
+                with st.expander(f"Tavolo {comanda['tavolo']} - {comanda['ora']} ({comanda['stato']})"):
+                    st.write(f"**Piatti:** {', '.join(comanda['piatti'])}")
+                    st.write(f"**Totale:** €{comanda['totale']:.2f}")
+                    
+                    # I Junior possono solo gestire lo stato, Senior/Admin anche annullare
+                    col1, col2 = st.columns(2)
+                    if comanda['stato'] == "In Attesa":
+                        if col1.button("✅ Metti in lavorazione", key=f"lav_{comanda['id_ordine']}"):
+                            comanda['stato'] = "In Lavorazione"
+                            st.rerun()
+                    elif comanda['stato'] == "In Lavorazione":
+                        if col1.button("🏁 Segna Evato", key=f"eva_{comanda['id_ordine']}"):
+                            comanda['stato'] = "Evato"
+                            st.rerun()
+                    
+                    if user['ruolo'] in ["Senior", "Admin"]:
+                        if col2.button("❌ Annulla Comanda", key=f"ann_{comanda['id_ordine']}"):
+                            st.session_state.comande.remove(comanda)
+                            st.rerun()
+
+        st.divider()
+
+        # PANNELLO SENIOR E ADMIN: Modifica Menu
+        if user['ruolo'] in ["Senior", "Admin"]:
+            st.header("🍕 Gestione Menu")
+            with st.form("aggiungi_piatto"):
+                col1, col2, col3 = st.columns(3)
+                nome = col1.text_input("Nome Piatto")
+                prezzo = col2.number_input("Prezzo €", min_value=0.0, step=0.5)
+                categoria = col3.text_input("Categoria")
+                if st.form_submit_button("Aggiungi Piatto"):
+                    nuovo_id = max([p['id'] for p in st.session_state.menu]) + 1 if st.session_state.menu else 1
+                    st.session_state.menu.append({"id": nuovo_id, "nome": nome, "prezzo": prezzo, "categoria": categoria})
+                    st.success("Piatto aggiunto! I clienti lo vedranno immediatamente.")
+                    st.rerun()
+            
+            st.dataframe(pd.DataFrame(st.session_state.menu))
+
+        # PANNELLO ADMIN: Gestione Utenti e Statistiche
+        if user['ruolo'] == "Admin":
+            st.divider()
+            st.header("⚙️ Amministrazione")
+            st.write("Utenti registrati nel sistema:")
+            st.json(st.session_state.utenti)
