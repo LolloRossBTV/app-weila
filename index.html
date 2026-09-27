@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Menu Weilà & Kai</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f9f9f9; color: #333; padding-bottom: 80px; }
+        h1 { font-size: 24px; margin-bottom: 5px; }
+        h2 { font-size: 20px; color: #2c3e50; margin-top: 30px; border-bottom: 2px solid #eee; padding-bottom: 5px;}
+        .subtitle { font-size: 14px; color: #7f8c8d; margin-top: 0; }
+        .menu-item { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .item-info { width: 75%; }
+        .item-name { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .item-desc { font-size: 12px; color: #7f8c8d; line-height: 1.4; }
+        .item-price { font-weight: bold; color: #e74c3c; margin-top: 5px; }
+        .add-btn { background: #3498db; color: white; border: none; border-radius: 8px; width: 40px; height: 40px; font-size: 20px; font-weight: bold; cursor: pointer; }
+        #cart-section { margin-top: 40px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+        .remove-btn { color: #e74c3c; cursor: pointer; font-weight: bold; }
+        .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 15px; }
+        .submit-btn { background: #27ae60; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-size: 16px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1 id="titolo-tavolo">📍 Tavolo --</h1>
+    <p class="subtitle">Benvenuti da Weilà & Kai. Seleziona i piatti da ordinare.</p>
+
+    <div id="menu-container"></div>
+
+    <div id="cart-section">
+        <h2>🛒 Il tuo Ordine</h2>
+        <div id="cart-items"><p style="color: #7f8c8d; font-size: 14px;">Il carrello è vuoto.</p></div>
+        <div class="total">Totale: €<span id="cart-total">0.00</span></div>
+        <button class="submit-btn" onclick="inviaOrdine()">🚀 INVIA ORDINE IN CUCINA</button>
+    </div>
+
+    <script>
+        // 1. Legge il numero del tavolo dall'URL (es: ?tavolo=3)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tavolo = urlParams.get('tavolo') || "Test";
+        document.getElementById('titolo-tavolo').innerText = `📍 Tavolo ${tavolo}`;
+
+        // 2. Dati del Menu
+        const menu = [
+            { id: 1, categoria: "🍤 Antipasti", nome: "Frittelle Farcite (3 pz)", desc: "Mortadella, stracciatella e pistacchio", prezzo: 6.00 },
+            { id: 2, categoria: "🍤 Antipasti", nome: "Tartare di Tonno", desc: "Tonno fresco abbattuto", prezzo: 10.00 },
+            { id: 3, categoria: "🍝 I Nostri Primi", nome: "Spaghetti all'Assassina", desc: "La classica ricetta barese saltata in padella", prezzo: 12.00 },
+            { id: 4, categoria: "🍕 Le Pizze", nome: "Pizza Weilà", desc: "Mozzarella, datterino giallo, salmone, burratina", prezzo: 13.00 },
+            { id: 5, categoria: "🥩 Secondi Piatti", nome: "Zampina (250gr)", desc: "Tipica salsiccia a ruota", prezzo: 10.00 }
+        ];
+
+        let carrello = [];
+
+        // 3. Genera l'interfaccia del menu
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            let currentCategory = "";
+
+            menu.forEach(item => {
+                if (item.categoria !== currentCategory) {
+                    container.innerHTML += `<h2>${item.categoria}</h2>`;
+                    currentCategory = item.categoria;
+                }
+
+                container.innerHTML += `
+                    <div class="menu-item">
+                        <div class="item-info">
+                            <div class="item-name">${item.nome}</div>
+                            <div class="item-desc">${item.desc}</div>
+                            <div class="item-price">€${item.prezzo.toFixed(2)}</div>
+                        </div>
+                        <button class="add-btn" onclick="aggiungi(${item.id})">+</button>
+                    </div>
+                `;
+            });
+        }
+
+        // 4. Logica del carrello
+        function aggiungi(id) {
+            const prodotto = menu.find(p => p.id === id);
+            carrello.push(prodotto);
+            aggiornaCarrello();
+        }
+
+        function rimuovi(index) {
+            carrello.splice(index, 1);
+            aggiornaCarrello();
+        }
+
+        function aggiornaCarrello() {
+            const cartContainer = document.getElementById('cart-items');
+            const totalElement = document.getElementById('cart-total');
+            
+            if (carrello.length === 0) {
+                cartContainer.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">Il carrello è vuoto.</p>';
+                totalElement.innerText = "0.00";
+                return;
+            }
+
+            cartContainer.innerHTML = "";
+            let totale = 0;
+
+            carrello.forEach((item, index) => {
+                totale += item.prezzo;
+                cartContainer.innerHTML += `
+                    <div class="cart-item">
+                        <span>${item.nome}</span>
+                        <div>
+                            <span>€${item.prezzo.toFixed(2)}</span>
+                            <span class="remove-btn" onclick="rimuovi(${index})" style="margin-left: 15px;">❌</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            totalElement.innerText = totale.toFixed(2);
+        }
+
+        // 5. Invio Ordine
+        function inviaOrdine() {
+            if (carrello.length === 0) {
+                alert("Aggiungi qualcosa al carrello prima di ordinare!");
+                return;
+            }
+            // Qui inseriremo la chiamata al server per stampare
+            alert(`Ordine per il Tavolo ${tavolo} inviato con successo!`);
+            carrello = [];
+            aggiornaCarrello();
+        }
+
+        // Avvia l'app
+        renderMenu();
+    </script>
+</body>
+</html>
